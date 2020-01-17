@@ -29,10 +29,13 @@ namespace tla_proj
             }
         }
 
-        void addTotalErrors()
+     
+
+        private void Start_Click(object sender, EventArgs e)
         {
-            totalErrors++;
-            Errorlabel.Text = totalErrors.ToString();
+            ErrorCheck errorCheck = new ErrorCheck(FilePath.Text , Errorlabel , errorTextBox);
+
+            errorCheck.startScan();
         }
     }
 }

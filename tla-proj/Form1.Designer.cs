@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.label1 = new System.Windows.Forms.Label();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.errorTextBox = new System.Windows.Forms.RichTextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.Errorlabel = new System.Windows.Forms.Label();
             this.Start = new System.Windows.Forms.Button();
@@ -48,14 +48,15 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "File Path : ";
             // 
-            // richTextBox1
+            // errorTextBox
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(12, 220);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(464, 283);
-            this.richTextBox1.TabIndex = 1;
-            this.richTextBox1.Text = "";
+            this.errorTextBox.BackColor = System.Drawing.Color.White;
+            this.errorTextBox.Location = new System.Drawing.Point(12, 220);
+            this.errorTextBox.Name = "errorTextBox";
+            this.errorTextBox.ReadOnly = true;
+            this.errorTextBox.Size = new System.Drawing.Size(464, 283);
+            this.errorTextBox.TabIndex = 1;
+            this.errorTextBox.Text = "";
             // 
             // label2
             // 
@@ -84,6 +85,7 @@
             this.Start.TabIndex = 4;
             this.Start.Text = "Start";
             this.Start.UseVisualStyleBackColor = true;
+            this.Start.Click += new System.EventHandler(this.Start_Click);
             // 
             // FilePath
             // 
@@ -134,7 +136,7 @@
             this.Controls.Add(this.Start);
             this.Controls.Add(this.Errorlabel);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.errorTextBox);
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "JavaSyntaxErrorFinder";
@@ -146,7 +148,7 @@
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.RichTextBox errorTextBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
