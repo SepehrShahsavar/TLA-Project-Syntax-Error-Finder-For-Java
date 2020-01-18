@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace tla_proj
     public class ErrorCheck
     {
         private string FilePath { get; set; }
-        private int Line = 0;
+        private int totalLines = 0;
         private int totalErrors = 0;
 
 
@@ -35,19 +36,64 @@ namespace tla_proj
 
             while ((line = sr.ReadLine()) != null)
             {
-                addTotalErrors();
-                Line++;
-                errorTextBox.Text += line;
-                errorTextBox.Text += "\n";
+                totalLines++;
+                if (line.Contains("System"))
+                {
+                    checkSout(line);
+                }
+                
 
             }
         }
 
 
-        void addTotalErrors()
+        private void addTotalErrors()
         {
             totalErrors++;
             Errorlabel.Text = totalErrors.ToString();
+        }
+
+        private void checkSout(string line)
+        {
+            string sout = "System.out.println";
+            string t = "System.out.println";
+            int i = 0;
+            while(line[i] != 'S') { i++; }
+
+            for (int j=0; j<sout.Length; j++)
+            {
+                if (t[j] != line[i+j])
+                {
+                    errorTextBox.Text += "error in Line "+ totalLines +" : missing " + sout[j] + " in system.out.println(";
+                    addTotalErrors();
+                    return;
+                }
+            }
+
+            Stack temp = new Stack();
+            while (i < line.Length)
+            {
+                if (line[i] == '(') { temp.Push(line[i]); }
+
+                if (line[i] == ')') { temp.Pop(); }
+                i++;
+            }
+
+            if (temp.Count > 0)
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in system.out.println(";
+                addTotalErrors();
+                return;
+            }
+
+            if (line[line.Length -2] != ';')
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
+                addTotalErrors();
+                return;
+            }
+
+            errorTextBox.Text += "sout correct !";
         }
     }
 }
