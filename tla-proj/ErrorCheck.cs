@@ -32,18 +32,27 @@ namespace tla_proj
              var fs = new FileStream(FilePath, FileMode.Open, FileAccess.Read);
              var sr = new StreamReader(fs, Encoding.UTF8);
 
-            string line = String.Empty;
+            //string line = String.Empty;
 
-            while ((line = sr.ReadLine()) != null)
+            string[] lines = File.ReadAllLines(FilePath , Encoding.UTF8);
+
+            foreach (string line in lines)
             {
                 totalLines++;
                 if (line.Contains("System"))
                 {
                     checkSout(line);
                 }
-                
-
             }
+
+            //while ((line = sr.ReadLine()) != null)
+            //{
+            //    totalLines++;
+            //    if (line.Contains("System"))
+            //    {
+            //        checkSout(line);
+            //    }
+            //}
         }
 
 
@@ -53,7 +62,7 @@ namespace tla_proj
             Errorlabel.Text = totalErrors.ToString();
         }
 
-        private void checkSout(string line)
+        private Boolean checkSout(string line)
         {
             string sout = "System.out.println";
             string t = "System.out.println";
@@ -66,7 +75,7 @@ namespace tla_proj
                 {
                     errorTextBox.Text += "error in Line "+ totalLines +" : missing " + sout[j] + " in system.out.println(";
                     addTotalErrors();
-                    return;
+                    return false;
                 }
             }
 
@@ -74,8 +83,10 @@ namespace tla_proj
             while (i < line.Length)
             {
                 if (line[i] == '(') { temp.Push(line[i]); }
+                if (line[i] == '"') { temp.Push(line[i]); }
 
                 if (line[i] == ')') { temp.Pop(); }
+                if (line[i] == '"') { temp.Pop(); }
                 i++;
             }
 
@@ -83,17 +94,17 @@ namespace tla_proj
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in system.out.println(";
                 addTotalErrors();
-                return;
+                return false;
             }
 
             if (line[line.Length -2] != ';')
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
                 addTotalErrors();
-                return;
+                return true;
             }
 
-            errorTextBox.Text += "sout correct !";
+            return true;
         }
     }
 }
