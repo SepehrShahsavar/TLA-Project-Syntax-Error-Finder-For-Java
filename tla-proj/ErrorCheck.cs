@@ -14,6 +14,7 @@ namespace tla_proj
         private string FilePath { get; set; }
         private int totalLines = 0;
         private int totalErrors = 0;
+        private List<String> variables = new List<string>();
 
 
         private Label Errorlabel { get; set; }
@@ -38,23 +39,28 @@ namespace tla_proj
 
             foreach (string line in lines)
             {
+                if (checkBraces(line))
+                {
+                    continue;
+                }
                 totalLines++;
                 if (line.Contains("System"))
                 {
                     checkSout(line);
                 }
             }
-
-            //while ((line = sr.ReadLine()) != null)
-            //{
-            //    totalLines++;
-            //    if (line.Contains("System"))
-            //    {
-            //        checkSout(line);
-            //    }
-            //}
         }
 
+        private bool checkBraces(string line)
+        {
+            int i = 0;
+            while (line[i] == ' ') { i++; }
+            if (line[i] == '}' || line[i] == '{')
+            {
+                return false;
+            }
+            return true;
+        }
 
         private void addTotalErrors()
         {
@@ -71,7 +77,7 @@ namespace tla_proj
 
             for (int j=0; j<sout.Length; j++)
             {
-                if (t[j] != line[i+j])
+                if (sout[j] != line[i+j])
                 {
                     errorTextBox.Text += "error in Line "+ totalLines +" : missing " + sout[j] + " in system.out.println(";
                     addTotalErrors();
@@ -97,7 +103,12 @@ namespace tla_proj
                 return false;
             }
 
-            if (line[line.Length -2] != ';')
+            for (int j = 0; j < line.Length; j++)
+            {
+
+            }
+
+            if (line[i-1] != ';')
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
                 addTotalErrors();
