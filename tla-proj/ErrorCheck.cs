@@ -43,16 +43,12 @@ namespace tla_proj
                 {
                     checkSout(line);
                 }
+                if (line.Contains("StringWriter"))
+                {
+                    checkStringWriter(line);
+                }
             }
-
-            //while ((line = sr.ReadLine()) != null)
-            //{
-            //    totalLines++;
-            //    if (line.Contains("System"))
-            //    {
-            //        checkSout(line);
-            //    }
-            //}
+            fs.Close();
         }
 
 
@@ -73,7 +69,7 @@ namespace tla_proj
             {
                 if (t[j] != line[i + j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines + " : missing " + sout[j] + " in system.out.println(";
+                    errorTextBox.Text += "error in Line " + totalLines + " : missing " + sout[j] + " in system.out.println(\n";
                     addTotalErrors();
                     return false;
                 }
@@ -92,12 +88,12 @@ namespace tla_proj
 
             if (temp.Count > 0)
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in system.out.println(";
+                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in system.out.println(\n";
                 addTotalErrors();
                 return false;
             }
 
-            if (line[line.Length - 2] != ';')
+            if (line[line.Length - 1] != ';')
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
                 addTotalErrors();
@@ -118,14 +114,20 @@ namespace tla_proj
             {
                 if (line[i + j] != sw[j])
                 {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
                     return false;
                 }
             }
             i += sw.Length;
             if (!line.Contains('='))
             {
+                errorTextBox.Text += "error in Line " + totalLines;
+                addTotalErrors();
                 return false;
             }
+
+            while (line[i] != '=') { i++; }
 
             while (line[i] != 'n') { i++; }
 
@@ -133,6 +135,8 @@ namespace tla_proj
             {
                 if (line[i + j] != newString[j])
                 {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
                     return false;
                 }
             }
@@ -143,16 +147,103 @@ namespace tla_proj
             {
                 if (line[i + j] != sw[j])
                 {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
                     return false;
                 }
             }
             i += sw.Length;
-            if (!line.Contains(';'))
+
+            if (line[line.Length - 1] != ';')
             {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
+                addTotalErrors();
                 return false;
             }
+
             return true;
         }
+
+        private Boolean checkFileStreams(string line, string error)
+        {
+            string fi = error;
+            string nString = "new";
+            int i = 0;
+            while (line[i] != 'F') { i++; }
+
+            for (int j = 0; j < fi.Length; j++)
+            {
+                if (line[i + j] != fi[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+            }
+            i += fi.Length;
+            if (!line.Contains('='))
+            {
+                errorTextBox.Text += "error in Line " + totalLines;
+                addTotalErrors();
+                return false;
+            }
+
+            while (line[i] != '=') { i++; }
+
+            while (line[i] != 'n') { i++; }
+
+            for (int j = 0; j < nString.Length; j++)
+            {
+                if (line[i + j] != nString[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+            }
+            i += nString.Length;
+            while (line[i] != 'F') { i++; }
+
+            for (int j = 0; j < fi.Length; j++)
+            {
+                if (line[i + j] != fi[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+            }
+            i += fi.Length;
+
+            Stack temp = new Stack();
+            while (i < line.Length)
+            {
+                if (line[i] == '(') { temp.Push(line[i]); }
+                if (line[i] == '"') { temp.Push(line[i]); }
+
+                if (line[i] == ')') { temp.Pop(); }
+                if (line[i] == '"') { temp.Pop(); }
+                i++;
+            }
+
+            if (temp.Count > 0)
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in system.out.println(";
+                addTotalErrors();
+                return false;
+            }
+            if (line[line.Length - 1] != ';')
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
+                addTotalErrors();
+                return false;
+            }
+
+            return true;
+
+        }
+
+
     }
 
 }
