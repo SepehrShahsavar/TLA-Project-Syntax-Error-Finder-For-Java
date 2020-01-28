@@ -14,13 +14,12 @@ namespace tla_proj
         private string FilePath { get; set; }
         private int totalLines = 0;
         private int totalErrors = 0;
-        private List<String> variables = new List<string>();
 
 
         private Label Errorlabel { get; set; }
-        private RichTextBox errorTextBox { get; set; } 
+        private RichTextBox errorTextBox { get; set; }
 
-        public ErrorCheck(string filepath,Label errors , RichTextBox box)
+        public ErrorCheck(string filepath, Label errors, RichTextBox box)
         {
             FilePath = filepath;
             errorTextBox = box;
@@ -30,37 +29,37 @@ namespace tla_proj
 
         public void startScan()
         {
-             var fs = new FileStream(FilePath, FileMode.Open, FileAccess.Read);
-             var sr = new StreamReader(fs, Encoding.UTF8);
+            var fs = new FileStream(FilePath, FileMode.Open, FileAccess.Read);
+            var sr = new StreamReader(fs, Encoding.UTF8);
 
             //string line = String.Empty;
 
-            string[] lines = File.ReadAllLines(FilePath , Encoding.UTF8);
+            string[] lines = File.ReadAllLines(FilePath, Encoding.UTF8);
 
             foreach (string line in lines)
             {
-                if (checkBraces(line))
-                {
-                    continue;
-                }
                 totalLines++;
                 if (line.Contains("System"))
                 {
                     checkSout(line);
                 }
+                if (line.Contains("StringWriter"))
+                {
+                    checkStringWriter(line);
+                }
+
             }
+
+            //while ((line = sr.ReadLine()) != null)
+            //{
+            //    totalLines++;
+            //    if (line.Contains("System"))
+            //    {
+            //        checkSout(line);
+            //    }
+            //}
         }
 
-        private bool checkBraces(string line)
-        {
-            int i = 0;
-            while (line[i] == ' ') { i++; }
-            if (line[i] == '}' || line[i] == '{')
-            {
-                return false;
-            }
-            return true;
-        }
 
         private void addTotalErrors()
         {
@@ -68,18 +67,20 @@ namespace tla_proj
             Errorlabel.Text = totalErrors.ToString();
         }
 
+
+
         private Boolean checkSout(string line)
         {
             string sout = "System.out.println";
             string t = "System.out.println";
             int i = 0;
-            while(line[i] != 'S') { i++; }
+            while (line[i] != 'S') { i++; }
 
-            for (int j=0; j<sout.Length; j++)
+            for (int j = 0; j < sout.Length; j++)
             {
-                if (sout[j] != line[i+j])
+                if (t[j] != line[i + j])
                 {
-                    errorTextBox.Text += "error in Line "+ totalLines +" : missing " + sout[j] + " in system.out.println(";
+                    errorTextBox.Text += "error in Line " + totalLines + " : missing " + sout[j] + " in system.out.println(";
                     addTotalErrors();
                     return false;
                 }
@@ -103,12 +104,7 @@ namespace tla_proj
                 return false;
             }
 
-            for (int j = 0; j < line.Length; j++)
-            {
-
-            }
-
-            if (line[i-1] != ';')
+            if (line[line.Length - 2] != ';')
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
                 addTotalErrors();
@@ -117,5 +113,55 @@ namespace tla_proj
 
             return true;
         }
+        private Boolean checkStringWriter(string line)
+        {
+            string sw = "StringWriter";
+            string newString = "new";
+            int i = 0;
+            while (line[i] != 'S') { i++; }
+
+            for (int j = 0; j < sw.Length; j++)
+            {
+                if (line[i + j] != sw[j])
+                {
+                    return false;
+                }
+            }
+            i += sw.Length;
+            if (!line.Contains('='))
+            {
+                return false;
+            }
+
+            while (line[i] != 'n') { i++; }
+
+            for (int j = 0; j < newString.Length; j++)
+            {
+                if (line[i + j] != newString[j])
+                {
+                    return false;
+                }
+            }
+            i += newString.Length;
+            while (line[i] != 'S') { i++; }
+
+            for (int j = 0; j < sw.Length; j++)
+            {
+                if (line[i + j] != sw[j])
+                {
+                    return false;
+                }
+            }
+            i += sw.Length;
+            if (!line.Contains(';'))
+            {
+                return false;
+            }
+            return true;
+        }
+
+
     }
+
+
 }
