@@ -14,7 +14,11 @@ namespace tla_proj
         private string FilePath { get; set; }
         private int totalLines = 0;
         private int totalErrors = 0;
-
+        private string StringWriterVar = "";
+        private string FileInputVar = "";
+        private string FileOutputVar = "destFile";
+        private string ByteArrayVar = "";
+        private string ExceptionVar = "";
 
         private Label Errorlabel { get; set; }
         private RichTextBox errorTextBox { get; set; }
@@ -39,13 +43,30 @@ namespace tla_proj
             foreach (string line in lines)
             {
                 totalLines++;
+
                 if (line.Contains("System"))
                 {
                     checkSout(line);
                 }
+
                 if (line.Contains("StringWriter"))
                 {
                     checkStringWriter(line);
+                }
+
+                if (line.Contains("FileInputStream"))
+                {
+                    checkFileStreams(line, "FileInputStream");
+                }
+
+                if (line.Contains("FileOutputStream"))
+                {
+                    checkFileStreams(line, "FileOutputStream");
+                }
+
+                if (line.Contains("write"))
+                {
+                    checkDesFileWrite(line);
                 }
             }
             fs.Close();
@@ -228,13 +249,13 @@ namespace tla_proj
 
             if (temp.Count > 0)
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in system.out.println(";
+                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in FileStreamInput\n";
                 addTotalErrors();
                 return false;
             }
             if (line[line.Length - 1] != ';')
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
+                errorTextBox.Text += "error in Line " + totalLines + " : missing ; \n";
                 addTotalErrors();
                 return false;
             }
@@ -243,7 +264,67 @@ namespace tla_proj
 
         }
 
+        private bool checkDesFileWrite(string line)
+        {
+            int i = 0;
+            while (line[i] != FileOutputVar[0])
+            {
+                if (i >= line.Length) { return false; }
+                i++;
+            }
+            for (int j = 0; j < FileOutputVar.Length; j++)
+            {
+                if (FileOutputVar[j] != line[i + j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines + " : method not found in FileOutPut Stream\n";
+                    addTotalErrors();
+                    return false;
+                }
+            }
 
+            i += FileOutputVar.Length + 1;
+            Stack stack = new Stack();
+            string temp = "";
+            while (i < line.Length)
+            {
+                if (line[i] == '(')
+                {
+                    stack.Push('(');
+                }
+                
+                if (line[i] == ')')
+                {
+                    stack.Pop();
+                }
+                
+                if (line[i] == '(' || line[i] == ')')
+                {
+                    temp += line[i];
+                }
+                i++;
+            }
+            if (stack.Count > 0)
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in write\n";
+                addTotalErrors();
+                return false;
+            }
+
+            if (!temp.Equals(ByteArrayVar))
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " var " + temp+" doesn't declared \n";
+                addTotalErrors();
+                return false;
+            }
+
+            if (line[line.Length - 1] != ';')
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing ; \n";
+                addTotalErrors();
+                return false;
+            }
+            return true;
+        }
     }
 
 }
