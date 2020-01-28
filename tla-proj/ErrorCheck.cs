@@ -133,6 +133,8 @@ namespace tla_proj
                 return false;
             }
 
+            while (line[i] != '=') { i++; }
+
             while (line[i] != 'n') { i++; }
 
             for (int j = 0; j < newString.Length; j++)
