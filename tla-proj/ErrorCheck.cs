@@ -17,9 +17,9 @@ namespace tla_proj
 
 
         private Label Errorlabel { get; set; }
-        private RichTextBox errorTextBox { get; set; } 
+        private RichTextBox errorTextBox { get; set; }
 
-        public ErrorCheck(string filepath,Label errors , RichTextBox box)
+        public ErrorCheck(string filepath, Label errors, RichTextBox box)
         {
             FilePath = filepath;
             errorTextBox = box;
@@ -29,12 +29,12 @@ namespace tla_proj
 
         public void startScan()
         {
-             var fs = new FileStream(FilePath, FileMode.Open, FileAccess.Read);
-             var sr = new StreamReader(fs, Encoding.UTF8);
+            var fs = new FileStream(FilePath, FileMode.Open, FileAccess.Read);
+            var sr = new StreamReader(fs, Encoding.UTF8);
 
             //string line = String.Empty;
 
-            string[] lines = File.ReadAllLines(FilePath , Encoding.UTF8);
+            string[] lines = File.ReadAllLines(FilePath, Encoding.UTF8);
 
             foreach (string line in lines)
             {
@@ -67,13 +67,13 @@ namespace tla_proj
             string sout = "System.out.println";
             string t = "System.out.println";
             int i = 0;
-            while(line[i] != 'S') { i++; }
+            while (line[i] != 'S') { i++; }
 
-            for (int j=0; j<sout.Length; j++)
+            for (int j = 0; j < sout.Length; j++)
             {
-                if (t[j] != line[i+j])
+                if (t[j] != line[i + j])
                 {
-                    errorTextBox.Text += "error in Line "+ totalLines +" : missing " + sout[j] + " in system.out.println(";
+                    errorTextBox.Text += "error in Line " + totalLines + " : missing " + sout[j] + " in system.out.println(";
                     addTotalErrors();
                     return false;
                 }
@@ -97,7 +97,7 @@ namespace tla_proj
                 return false;
             }
 
-            if (line[line.Length -2] != ';')
+            if (line[line.Length - 2] != ';')
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
                 addTotalErrors();
@@ -106,5 +106,53 @@ namespace tla_proj
 
             return true;
         }
+
+        private Boolean checkStringWriter(string line)
+        {
+            string sw = "StringWriter";
+            string newString = "new";
+            int i = 0;
+            while (line[i] != 'S') { i++; }
+
+            for (int j = 0; j < sw.Length; j++)
+            {
+                if (line[i + j] != sw[j])
+                {
+                    return false;
+                }
+            }
+            i += sw.Length;
+            if (!line.Contains('='))
+            {
+                return false;
+            }
+
+            while (line[i] != 'n') { i++; }
+
+            for (int j = 0; j < newString.Length; j++)
+            {
+                if (line[i + j] != newString[j])
+                {
+                    return false;
+                }
+            }
+            i += newString.Length;
+            while (line[i] != 'S') { i++; }
+
+            for (int j = 0; j < sw.Length; j++)
+            {
+                if (line[i + j] != sw[j])
+                {
+                    return false;
+                }
+            }
+            i += sw.Length;
+            if (!line.Contains(';'))
+            {
+                return false;
+            }
+            return true;
+        }
     }
+
 }
