@@ -47,6 +47,15 @@ namespace tla_proj
                 {
                     checkStringWriter(line);
                 }
+                if (line.Contains("FileInputStream"))
+                {
+                    checkFileStreams(line,"FileInputStream");
+                }
+                if (line.Contains("FileOutputStream"))
+                {
+                    checkFileStreams(line,"FileOutputStream");
+                }
+
 
             }
 
@@ -108,11 +117,12 @@ namespace tla_proj
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
                 addTotalErrors();
-                return true;
+                return false;
             }
 
             return true;
         }
+
         private Boolean checkStringWriter(string line)
         {
             string sw = "StringWriter";
@@ -124,12 +134,16 @@ namespace tla_proj
             {
                 if (line[i + j] != sw[j])
                 {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
                     return false;
                 }
             }
             i += sw.Length;
             if (!line.Contains('='))
             {
+                errorTextBox.Text += "error in Line " + totalLines;
+                addTotalErrors();
                 return false;
             }
 
@@ -141,6 +155,8 @@ namespace tla_proj
             {
                 if (line[i + j] != newString[j])
                 {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
                     return false;
                 }
             }
@@ -151,15 +167,100 @@ namespace tla_proj
             {
                 if (line[i + j] != sw[j])
                 {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
                     return false;
                 }
             }
             i += sw.Length;
-            if (!line.Contains(';'))
+            
+            if (line[line.Length - 1] != ';')
             {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
+                addTotalErrors();
                 return false;
             }
+
             return true;
+        }
+
+        private Boolean checkFileStreams(string line,string error)
+        {
+            string fi = error;
+            string nString = "new";
+            int i = 0;
+            while (line[i] != 'F') { i++; }
+
+            for (int j = 0; j < sw.Length; j++)
+            {
+                if (line[i + j] != sw[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+            }
+            i += sw.Length;
+            if (!line.Contains('='))
+            {
+                errorTextBox.Text += "error in Line " + totalLines;
+                addTotalErrors();
+                return false;
+            }
+
+            while (line[i] != '=') { i++; }
+
+            while (line[i] != 'n') { i++; }
+
+            for (int j = 0; j < newString.Length; j++)
+            {
+                if (line[i + j] != newString[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+            }
+            i += newString.Length;
+            while (line[i] != 'F') { i++; }
+
+            for (int j = 0; j < sw.Length; j++)
+            {
+                if (line[i + j] != sw[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+            }
+            i += sw.Length;
+            
+            Stack temp = new Stack();
+            while (i < line.Length)
+            {
+                if (line[i] == '(') { temp.Push(line[i]); }
+                if (line[i] == '"') { temp.Push(line[i]); }
+
+                if (line[i] == ')') { temp.Pop(); }
+                if (line[i] == '"') { temp.Pop(); }
+                i++;
+            }
+
+            if (temp.Count > 0)
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in system.out.println(";
+                addTotalErrors();
+                return false;
+            }
+            if (line[line.Length - 1] != ';')
+            {
+                errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
+                addTotalErrors();
+                return false;
+            }
+
+            return true;
+
         }
 
 
