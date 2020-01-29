@@ -51,7 +51,7 @@ namespace tla_proj
 
                 if (line.Contains("StringWriter"))
                 {
-                    checkStringWriter(line);
+                    checkStringWriter(line.Trim());
                 }
 
                 if (line.Contains("FileInputStream"))
@@ -128,54 +128,44 @@ namespace tla_proj
         {
             string sw = "StringWriter";
             string newString = "new";
-            int i = 0;
-            while (line[i] != 'S') { i++; }
-
-            for (int j = 0; j < sw.Length; j++)
+            for (int i = 0; i < sw.Length; i++)
             {
-                if (line[i + j] != sw[j])
+                if (line[i] != sw[i])
                 {
                     errorTextBox.Text += "error in Line " + totalLines;
                     addTotalErrors();
                     return false;
                 }
             }
-            i += sw.Length;
-            if (!line.Contains('='))
-            {
-                errorTextBox.Text += "error in Line " + totalLines;
-                addTotalErrors();
-                return false;
+            
+            while(line[i]!='='){
+                StringWriterVar+=line[i];                                                   //make the variable
+                i++;                                  
             }
-
-            while (line[i] != '=') { i++; }
-
-            while (line[i] != 'n') { i++; }
 
             for (int j = 0; j < newString.Length; j++)
             {
-                if (line[i + j] != newString[j])
+                if (line[i] != newString[j])
                 {
                     errorTextBox.Text += "error in Line " + totalLines;
                     addTotalErrors();
                     return false;
                 }
+                i++;
             }
-            i += newString.Length;
-            while (line[i] != 'S') { i++; }
 
             for (int j = 0; j < sw.Length; j++)
             {
-                if (line[i + j] != sw[j])
+                if (line[i] != sw[j])
                 {
                     errorTextBox.Text += "error in Line " + totalLines;
                     addTotalErrors();
                     return false;
                 }
+                i++;
             }
-            i += sw.Length;
 
-            if (line[line.Length - 1] != ';')
+            if (line[i]!=';')
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
                 addTotalErrors();
