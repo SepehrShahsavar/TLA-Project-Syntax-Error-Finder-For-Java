@@ -392,7 +392,69 @@ namespace tla_proj
 
         }
 
-        
+
+        private Boolean checkStringException(string line, string varStringWriter)
+        {
+            string stringVar = "String";
+            string tostring = "toString";
+            int i = 0;
+            for (int j = 0; j < stringVar.Length; j++)
+            {
+                if (line[i] != stringVar[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+                i = j;
+            }
+
+            while (line[i] != '=')
+            {
+                ExceptionVar += line[i];
+                i++;
+            }
+
+            i++;
+
+            for (int j = 0; j < varStringWriter.length; j++)
+            {
+                if (line[i] != varStringWriter[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+                i++;
+            }
+
+            if (line[i] != '.')
+            {
+                errorTextBox.Text += "error in Line " + totalLines;
+                addTotalErrors();
+                return false;
+            }
+
+            i++;
+            for (int j = 0; j < tostring.Length; j++)
+            {
+                if (line[i] != tostring[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+                i++;
+            }
+
+            if (line[i] != ';')
+            {
+                return false;
+            }
+
+            return true;
+        }
+
     }
 
 }
