@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,7 +17,7 @@ namespace tla_proj
         private int totalErrors = 0;
         private string StringWriterVar = "";
         private string FileInputVar = "";
-        private string FileOutputVar = "destFile";
+        private string FileOutputVar = "";
         private string ByteArrayVar = "";
         private string ExceptionVar = "";
 
@@ -38,37 +39,27 @@ namespace tla_proj
 
             //string line = String.Empty;
 
-            string[] lines = File.ReadAllLines(FilePath, Encoding.UTF8);
-
+            List<string> lines = File.ReadAllLines(FilePath, Encoding.UTF8).ToList<string>();
+            lines.ForEach(x =>
+            {
+                x = x.Trim();
+                char[] tmp = x.ToCharArray();
+                ExceptionVar = "ex";
+                x = String.Join("", tmp);
+            });
+            char[] space = { ' ' };
             foreach (string line in lines)
             {
-                totalLines++;
-
-                if (line.Contains("System"))
+                if (line.Contains("}") || line.Contains("{"))
                 {
-                    checkSout(line);
+                    continue;
                 }
-
-                if (line.Contains("StringWriter"))
+                if (!checkSout(line.Trim()) && !checkFileStreams(line.Trim() , "FileInputStream") && !checkFileStreams(line.Trim(), "FileOutputStream") && !checkReadWrite(FileInputVar , "read" , ByteArrayVar , line.Trim())
+                    && !checkByteArray(line.Trim()) && checkFileClose(line.Trim() , FileInputVar) && !checkFileClose(line.Trim(), FileOutputVar) && !checkStringWriter(line.Trim()) && !checkStackTrace(line.Trim())
+                    && !checkString(line.Trim()))
                 {
-                    checkStringWriter(line.Trim());
+                    addTotalErrors();
                 }
-
-                if (line.Contains("FileInputStream"))
-                {
-                    checkFileStreams(line, "FileInputStream");
-                }
-
-                if (line.Contains("FileOutputStream"))
-                {
-                    checkFileStreams(line, "FileOutputStream");
-                }
-
-                if (line.Contains("write"))
-                {
-                    checkDesFileWrite(line);
-                }
-
             }
             fs.Close();
         }
@@ -85,40 +76,39 @@ namespace tla_proj
             string sout = "System.out.println";
             string t = "System.out.println";
             int i = 0;
-            while (line[i] != 'S') { i++; }
+            while (line[i] != 'S') 
+            {
+                i++;
+                if (i >= line.Length) { return false; }
+                
+            }
 
             for (int j = 0; j < sout.Length; j++)
             {
                 if (t[j] != line[i + j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines + " : missing " + sout[j] + " in system.out.println(\n";
-                    addTotalErrors();
                     return false;
                 }
             }
 
             Stack temp = new Stack();
+            int counter = 0;
             while (i < line.Length)
             {
                 if (line[i] == '(') { temp.Push(line[i]); }
-                if (line[i] == '"') { temp.Push(line[i]); }
+                if (line[i] == '"') { counter++; }
 
                 if (line[i] == ')') { temp.Pop(); }
-                if (line[i] == '"') { temp.Pop(); }
                 i++;
             }
 
-            if (temp.Count > 0)
+            if (temp.Count > 0 || counter % 2 == 1)
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in system.out.println(\n";
-                addTotalErrors();
                 return false;
             }
 
             if (line[line.Length - 1] != ';')
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
-                addTotalErrors();
                 return true;
             }
 
@@ -127,52 +117,58 @@ namespace tla_proj
 
         private Boolean checkStringWriter(string line)
         {
+            line = line.Trim();
+            line = Regex.Replace(line, @"\s+", "");
             string sw = "StringWriter";
             string newString = "new";
             int i = 0;
-            for (int j = 0; j < sw.Length; i++)
+            while (line[i] != 'S')
             {
-                if (line[j] != sw[j])
+                i++;
+                if (i >= line.Length) { return false; }
+                
+            }
+            for (int j = 0; j < sw.Length; j++)
+            {
+                if (line[i + j] != sw[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
-                i = j;
+
             }
 
+            i += sw.Length;
             while (line[i] != '=')
             {
+                if (i > line.Length)
+                {
+                    return false;
+                }
                 StringWriterVar += line[i];                                                   //make the variable
                 i++;
             }
 
+            i++;
             for (int j = 0; j < newString.Length; j++)
             {
-                if (line[i] != newString[j])
+                if (line[i + j] != newString[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
-                i++;
             }
 
+            i += newString.Length;
             for (int j = 0; j < sw.Length; j++)
             {
                 if (line[i] != sw[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
                 i++;
             }
 
-            if (line[i] != ';')
+            if (line[line.Length - 1] != ';')
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
-                addTotalErrors();
                 return false;
             }
 
@@ -184,26 +180,33 @@ namespace tla_proj
             string fi = error;
             string nString = "new";
             int i = 0;
-            while (line[i] != 'F') { i++; }
 
             for (int j = 0; j < fi.Length; j++)
             {
                 if (line[i + j] != fi[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
             }
             i += fi.Length;
             if (!line.Contains('='))
             {
-                errorTextBox.Text += "error in Line " + totalLines;
-                addTotalErrors();
-                return false;
+               return false;
             }
 
-            while (line[i] != '=') { i++; }
+            while (line[i] != '=')
+            {
+                if (error.Contains("Input"))
+                {
+                    FileInputVar += line[i];
+                }
+                else
+                {
+                    FileOutputVar += line[i];
+                }
+
+                i++;
+            }
 
             while (line[i] != 'n') { i++; }
 
@@ -211,8 +214,6 @@ namespace tla_proj
             {
                 if (line[i + j] != nString[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
             }
@@ -223,123 +224,52 @@ namespace tla_proj
             {
                 if (line[i + j] != fi[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
             }
             i += fi.Length;
 
             Stack temp = new Stack();
+            int counter = 0;
             while (i < line.Length)
             {
                 if (line[i] == '(') { temp.Push(line[i]); }
-                if (line[i] == '"') { temp.Push(line[i]); }
+                if (line[i] == '"') { counter++; }
 
                 if (line[i] == ')') { temp.Pop(); }
-                if (line[i] == '"') { temp.Pop(); }
                 i++;
             }
 
-            if (temp.Count > 0)
+            if (temp.Count > 0 || counter % 2 == 1)
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in FileStreamInput\n";
-                addTotalErrors();
                 return false;
             }
             if (line[line.Length - 1] != ';')
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing ; \n";
-                addTotalErrors();
                 return false;
             }
 
             return true;
 
-        }
-
-        private bool checkDesFileWrite(string line)
-        {
-            int i = 0;
-            while (line[i] != FileOutputVar[0])
-            {
-                if (i >= line.Length) { return false; }
-                i++;
-            }
-            for (int j = 0; j < FileOutputVar.Length; j++)
-            {
-                if (FileOutputVar[j] != line[i + j])
-                {
-                    errorTextBox.Text += "error in Line " + totalLines + " : method not found in FileOutPut Stream\n";
-                    addTotalErrors();
-                    return false;
-                }
-            }
-
-            i += FileOutputVar.Length + 1;
-            Stack stack = new Stack();
-            string temp = "";
-            while (i < line.Length)
-            {
-                if (line[i] == '(')
-                {
-                    stack.Push('(');
-                }
-
-                if (line[i] == ')')
-                {
-                    stack.Pop();
-                }
-
-                if (line[i] == '(' || line[i] == ')')
-                {
-                    temp += line[i];
-                }
-                i++;
-            }
-            if (stack.Count > 0)
-            {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in write\n";
-                addTotalErrors();
-                return false;
-            }
-
-            if (!temp.Equals(ByteArrayVar))
-            {
-                errorTextBox.Text += "error in Line " + totalLines + " var " + temp + " doesn't declared \n";
-                addTotalErrors();
-                return false;
-            }
-
-            if (line[line.Length - 1] != ';')
-            {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing ; \n";
-                addTotalErrors();
-                return false;
-            }
-            return true;
         }
 
         private Boolean checkReadWrite(string varFile, string readOrWrite, string varArray, string line)
         {
             int i = 0;
-
-
+            char[] s = { ' ' };
+            varArray = varArray.Trim(s);
             for (int j = 0; j < varFile.Length; j++)
             {
                 if (line[j] != varFile[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
                 i = j;
             }
 
+            i++;
             if (line[i] != '.')
             {
-                errorTextBox.Text += "error in Line " + totalLines;
-                addTotalErrors();
                 return false;
             }
 
@@ -351,8 +281,6 @@ namespace tla_proj
             {
                 if (line[i] != readOrWrite[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
                 i++;
@@ -360,8 +288,6 @@ namespace tla_proj
 
             if (line[i] != '(')
             {
-                errorTextBox.Text += "error in Line " + totalLines;
-                addTotalErrors();
                 return false;
             }
 
@@ -373,8 +299,6 @@ namespace tla_proj
             {
                 if (line[i] != varArray[j])
                 {
-                    errorTextBox.Text += "error in Line " + totalLines;
-                    addTotalErrors();
                     return false;
                 }
                 i++;
@@ -382,17 +306,170 @@ namespace tla_proj
 
 
 
-            if (line[i] != '(' || line[i + 1] != ';')
+            if (line[i] != ')' || line[i + 1] != ';')
             {
-                errorTextBox.Text += "error in Line " + totalLines;
-                addTotalErrors();
                 return false;
             }
             return true;
 
         }
 
-        
+        private bool checkStackTrace(string line)
+        {
+            int i = 0;
+            string trimmed = line.Trim();
+            if (!ExceptionVar.Equals(trimmed.Substring(0, ExceptionVar.Length)))
+            {
+                return false;
+            }
+
+            if (!trimmed.Substring(ExceptionVar.Length + 1, 14).Equals("printStackTrac"))
+            {
+                return false;
+            }
+
+            i += ExceptionVar.Length + 1;
+            Stack stack = new Stack();
+            string temp = "";
+            while (i < trimmed.Length)
+            {
+                if (trimmed[i] == '(')
+                {
+                    stack.Push('(');
+                }
+
+                if (trimmed[i] == ')')
+                {
+                    stack.Pop();
+                }
+            }
+
+            if (stack.Count > 0)
+            {
+                return false;
+            }
+
+            if (trimmed[trimmed.Length - 1] != ';')
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool checkByteArray(string line)
+        {
+            string ar = "byte[]";
+            string type = line.Substring(0, ar.Length);
+            if (!ar.Equals(type))
+            {
+                return false;
+            }
+            int i = ar.Length;
+
+            while (line[i] != '=')
+            {
+                if (i >= line.Length)
+                {
+                    return false;
+                }
+
+                ByteArrayVar += line[i];
+                i++;
+            }
+            string nw = "new";
+            while (line[i] != 'n')
+            {
+                i++;
+            }
+            if (!nw.Equals(line.Substring(i, 3)))
+            {
+                return false;
+            }
+
+            i += 3;
+            while (line[i] != 'b') { i++; }
+            string tmp = "byte";
+            for (int j = 0; j < tmp.Length; j++)
+            {
+                if (line[i + j] != tmp[j])
+                {
+                    return false;
+                }
+            }
+
+            Stack stack = new Stack();
+            while (i < line.Length)
+            {
+                if (line[i] == '(')
+                {
+                    stack.Push('(');
+                }
+
+                if (line[i] == ')')
+                {
+                    stack.Pop();
+                }
+                i++;
+            }
+
+            if (line[line.Length - 1] != ';')
+            {
+                return false;
+            }
+
+            if (stack.Count > 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool checkFileClose(string line, string var)
+        {
+            var = var.Trim();
+            if (!var.Equals(line.Substring(0, var.Length)))
+            {
+                return false;
+            }
+
+            string cls = "close";
+
+            if (!cls.Equals(line.Substring(var.Length + 1, cls.Length)))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private bool checkString(string line)
+        {
+            line = line.Trim();
+            line = Regex.Replace(line, @"\s+", "");
+            string st = "String";
+            if (!st.Equals(line.Substring(0, st.Length)))
+            {
+                return false;
+            }
+            int i = 0;
+            while (line[i] != '=')
+            {
+                if (i >= line.Length) { return false; }
+                i++;
+            }
+
+            if (!StringWriterVar.Equals(line.Substring(i + 1, StringWriterVar.Length)))
+            {
+                return false;
+            }
+            i += StringWriterVar.Length + 1;
+            if (String.Compare(".toString();", line.Substring(i, 12)) != 0)
+            {
+                return false;
+            }
+            return true;
+        }
     }
 
 }
