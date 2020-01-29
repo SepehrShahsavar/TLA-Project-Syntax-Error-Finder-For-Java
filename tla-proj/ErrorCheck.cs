@@ -17,8 +17,8 @@ namespace tla_proj
         private string StringWriterVar = "";
         private string FileInputVar = "";
         private string FileOutputVar = "destFile";
-        private string ByteArrayVar = "";
-        private string ExceptionVar = "";
+        private string ByteArrayVar = "Array";
+        private string ExceptionVar = "ex";
 
         private Label Errorlabel { get; set; }
         private RichTextBox errorTextBox { get; set; }
@@ -64,10 +64,12 @@ namespace tla_proj
                     checkFileStreams(line, "FileOutputStream");
                 }
 
-                if (line.Contains("write"))
+                if (line.Contains("write") && !FileOutputVar.Equals(""))
                 {
                     checkDesFileWrite(line);
                 }
+
+               
             }
             fs.Close();
         }
@@ -148,7 +150,13 @@ namespace tla_proj
                 return false;
             }
 
-            while (line[i] != '=') { i++; }
+            while (line[i] != '=') 
+            {
+                StringWriterVar += line[i];
+                i++; 
+            }
+
+            StringWriterVar = StringWriterVar.Trim();
 
             while (line[i] != 'n') { i++; }
 
@@ -237,19 +245,19 @@ namespace tla_proj
             i += fi.Length;
 
             Stack temp = new Stack();
+            int counter = 0;
             while (i < line.Length)
             {
                 if (line[i] == '(') { temp.Push(line[i]); }
-                if (line[i] == '"') { temp.Push(line[i]); }
+                if (line[i] == '"') { counter++; }
 
                 if (line[i] == ')') { temp.Pop(); }
-                if (line[i] == '"') { temp.Pop(); }
                 i++;
             }
 
-            if (temp.Count > 0)
+            if (temp.Count > 0 || counter % 2 != 0)
             {
-                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in FileStreamInput\n";
+                errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses or qoution in FileStreamInput\n";
                 addTotalErrors();
                 return false;
             }
@@ -264,45 +272,98 @@ namespace tla_proj
 
         }
 
-        private bool checkDesFileWrite(string line)
+        //private bool checkDesFileWrite(string line)
+        //{
+        //    int i = 0;
+        //    string trimed = line.Trim();
+        //    for (int j = 0; j < FileOutputVar.Length; j++)
+        //    {
+        //        if (FileOutputVar[j] != trimed[i + j])
+        //        {
+        //            errorTextBox.Text += "error in Line " + totalLines + " : var" + trimed.Substring(i , FileOutputVar.Length) +" not found as FileOutPutStream instance \n";
+        //            addTotalErrors();
+        //            return false;
+        //        }
+        //    }
+
+        //    i += FileOutputVar.Length+1;
+        //    string sub = trimed.Substring(i, i + 5);
+        //    if (!sub.Contains("write"))
+        //    {
+        //        errorTextBox.Text += "error in Line " + totalLines + " : method not found in FileOutPut Stream\n";
+        //        addTotalErrors();
+        //        return false;
+        //    }
+        //    Stack stack = new Stack();
+        //    string temp = "";
+        //    while (i < trimed.Length)
+        //    {
+        //        if (trimed[i] == '(')
+        //        {
+        //            stack.Push('(');
+        //        }
+                
+        //        if (trimed[i] == ')')
+        //        {
+        //            stack.Pop();
+        //        }
+                
+        //        if (trimed[i] != '(' || trimed[i] != ')')
+        //        {
+        //            temp += trimed[i];
+        //        }
+        //        i++;
+        //    }
+        //    if (stack.Count > 0)
+        //    {
+        //        errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in write\n";
+        //        addTotalErrors();
+        //        return false;
+        //    }
+
+        //    if (!temp.Equals(ByteArrayVar))
+        //    {
+        //        errorTextBox.Text += "error in Line " + totalLines + " var " + temp+" doesn't declared \n";
+        //        addTotalErrors();
+        //        return false;
+        //    }
+
+        //    if (trimed[trimed.Length - 1] != ';')
+        //    {
+        //        errorTextBox.Text += "error in Line " + totalLines + " : missing ; \n";
+        //        addTotalErrors();
+        //        return false;
+        //    }
+        //    return true;
+        //}
+
+        private bool checkStackTrace(string line)
         {
             int i = 0;
-            while (line[i] != FileOutputVar[0])
+            string trimmed = line.Trim();
+            if (!ExceptionVar.Equals(trimmed.Substring(0 , ExceptionVar.Length)))
             {
-                if (i >= line.Length) { return false; }
-                i++;
+                errorTextBox.Text += "error in Line " + totalLines + " var doesn't declared \n";
+                addTotalErrors();
+                return false;
             }
-            for (int j = 0; j < FileOutputVar.Length; j++)
-            {
-                if (FileOutputVar[j] != line[i + j])
-                {
-                    errorTextBox.Text += "error in Line " + totalLines + " : method not found in FileOutPut Stream\n";
-                    addTotalErrors();
-                    return false;
-                }
-            }
-
-            i += FileOutputVar.Length + 1;
+            
+            i += ExceptionVar.Length + 1;
             Stack stack = new Stack();
             string temp = "";
-            while (i < line.Length)
+            while (i < trimmed.Length)
             {
-                if (line[i] == '(')
+                if (trimmed[i] == '(')
                 {
                     stack.Push('(');
                 }
-                
-                if (line[i] == ')')
+
+                if (trimmed[i] == ')')
                 {
                     stack.Pop();
                 }
-                
-                if (line[i] == '(' || line[i] == ')')
-                {
-                    temp += line[i];
-                }
-                i++;
             }
+
             if (stack.Count > 0)
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing parenthesses in write\n";
@@ -310,19 +371,13 @@ namespace tla_proj
                 return false;
             }
 
-            if (!temp.Equals(ByteArrayVar))
-            {
-                errorTextBox.Text += "error in Line " + totalLines + " var " + temp+" doesn't declared \n";
-                addTotalErrors();
-                return false;
-            }
-
-            if (line[line.Length - 1] != ';')
+            if (trimmed[trimmed.Length - 1] != ';')
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; \n";
                 addTotalErrors();
                 return false;
             }
+
             return true;
         }
     }
