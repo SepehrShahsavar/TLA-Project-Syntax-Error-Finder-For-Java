@@ -68,6 +68,7 @@ namespace tla_proj
                 {
                     checkDesFileWrite(line);
                 }
+
             }
             fs.Close();
         }
@@ -128,19 +129,22 @@ namespace tla_proj
         {
             string sw = "StringWriter";
             string newString = "new";
-            for (int i = 0; i < sw.Length; i++)
+            int i = 0;
+            for (int j = 0; j < sw.Length; i++)
             {
-                if (line[i] != sw[i])
+                if (line[j] != sw[j])
                 {
                     errorTextBox.Text += "error in Line " + totalLines;
                     addTotalErrors();
                     return false;
                 }
+                i = j;
             }
-            
-            while(line[i]!='='){
-                StringWriterVar+=line[i];                                                   //make the variable
-                i++;                                  
+
+            while (line[i] != '=')
+            {
+                StringWriterVar += line[i];                                                   //make the variable
+                i++;
             }
 
             for (int j = 0; j < newString.Length; j++)
@@ -165,7 +169,7 @@ namespace tla_proj
                 i++;
             }
 
-            if (line[i]!=';')
+            if (line[i] != ';')
             {
                 errorTextBox.Text += "error in Line " + totalLines + " : missing ; ";
                 addTotalErrors();
@@ -281,12 +285,12 @@ namespace tla_proj
                 {
                     stack.Push('(');
                 }
-                
+
                 if (line[i] == ')')
                 {
                     stack.Pop();
                 }
-                
+
                 if (line[i] == '(' || line[i] == ')')
                 {
                     temp += line[i];
@@ -302,7 +306,7 @@ namespace tla_proj
 
             if (!temp.Equals(ByteArrayVar))
             {
-                errorTextBox.Text += "error in Line " + totalLines + " var " + temp+" doesn't declared \n";
+                errorTextBox.Text += "error in Line " + totalLines + " var " + temp + " doesn't declared \n";
                 addTotalErrors();
                 return false;
             }
@@ -315,6 +319,80 @@ namespace tla_proj
             }
             return true;
         }
+
+        private Boolean checkReadWrite(string varFile, string readOrWrite, string varArray, string line)
+        {
+            int i = 0;
+
+
+            for (int j = 0; j < varFile.Length; j++)
+            {
+                if (line[j] != varFile[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+                i = j;
+            }
+
+            if (line[i] != '.')
+            {
+                errorTextBox.Text += "error in Line " + totalLines;
+                addTotalErrors();
+                return false;
+            }
+
+
+            i++;
+
+
+            for (int j = 0; j < readOrWrite.Length; j++)
+            {
+                if (line[i] != readOrWrite[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+                i++;
+            }
+
+            if (line[i] != '(')
+            {
+                errorTextBox.Text += "error in Line " + totalLines;
+                addTotalErrors();
+                return false;
+            }
+
+
+            i++;
+
+
+            for (int j = 0; j < varArray.Length; j++)
+            {
+                if (line[i] != varArray[j])
+                {
+                    errorTextBox.Text += "error in Line " + totalLines;
+                    addTotalErrors();
+                    return false;
+                }
+                i++;
+            }
+
+
+
+            if (line[i] != '(' || line[i + 1] != ';')
+            {
+                errorTextBox.Text += "error in Line " + totalLines;
+                addTotalErrors();
+                return false;
+            }
+            return true;
+
+        }
+
+        
     }
 
 }
