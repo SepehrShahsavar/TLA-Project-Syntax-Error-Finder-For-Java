@@ -22,13 +22,13 @@ namespace tla_proj
         private string ExceptionVar = "";
 
         private Label Errorlabel { get; set; }
-        private RichTextBox errorTextBox { get; set; }
+        public Label NoErr { get; private set; }
 
-        public ErrorCheck(string filepath, Label errors, RichTextBox box)
+        public ErrorCheck(string filepath, Label errors, Label noErr)
         {
             FilePath = filepath;
-            errorTextBox = box;
             Errorlabel = errors;
+            NoErr = noErr;
         }
 
 
@@ -48,18 +48,40 @@ namespace tla_proj
                 x = String.Join("", tmp);
             });
             char[] space = { ' ' };
+            
             foreach (string line in lines)
             {
+                bool[] isError = new bool[11];
                 if (line.Contains("}") || line.Contains("{"))
                 {
                     continue;
                 }
-                if (!checkSout(line.Trim()) && !checkFileStreams(line.Trim() , "FileInputStream") && !checkFileStreams(line.Trim(), "FileOutputStream") && !checkReadWrite(FileInputVar , "read" , ByteArrayVar , line.Trim())
-                    && !checkByteArray(line.Trim()) && checkFileClose(line.Trim() , FileInputVar) && !checkFileClose(line.Trim(), FileOutputVar) && !checkStringWriter(line.Trim()) && !checkStackTrace(line.Trim())
-                    && !checkString(line.Trim()))
+                isError[0] = !checkSout(line.Trim());
+                isError[1] = !checkFileClose(line.Trim(), FileInputVar);
+                isError[2] = !checkReadWrite(FileOutputVar, "write", ByteArrayVar, line.Trim());
+                isError[3] = !checkFileClose(line.Trim(), FileOutputVar);
+                isError[4] = !checkStringWriter(line.Trim());
+                isError[5] = !checkString(line.Trim());
+                isError[6] = !checkByteArray(line.Trim());
+                isError[7] = !checkReadWrite(FileInputVar, "read", ByteArrayVar, line.Trim());
+                isError[8] = !checkFileStreams(line.Trim(), "FileOutputStream");
+                isError[9] = !checkFileStreams(line.Trim(), "FileInputStream");
+                isError[10] = !checkStackTrace(line.Trim());
+                int counter = 0;
+                foreach (bool iserror in isError)
                 {
-                    addTotalErrors();
+                    if (iserror)
+                    {
+                        counter++;
+                    }
                 }
+
+                if (counter == 11) { addTotalErrors(); }
+                
+            }
+            if (Errorlabel.Text == '0'.ToString())
+            {
+                NoErr.Visible = true;
             }
             fs.Close();
         }
@@ -109,7 +131,7 @@ namespace tla_proj
 
             if (line[line.Length - 1] != ';')
             {
-                return true;
+                return false;
             }
 
             return true;
@@ -258,6 +280,7 @@ namespace tla_proj
             int i = 0;
             char[] s = { ' ' };
             varArray = varArray.Trim(s);
+            varFile = varFile.Trim();
             for (int j = 0; j < varFile.Length; j++)
             {
                 if (line[j] != varFile[j])
@@ -318,12 +341,13 @@ namespace tla_proj
         {
             int i = 0;
             string trimmed = line.Trim();
+
             if (!ExceptionVar.Equals(trimmed.Substring(0, ExceptionVar.Length)))
             {
                 return false;
             }
 
-            if (!trimmed.Substring(ExceptionVar.Length + 1, 14).Equals("printStackTrac"))
+            if (!trimmed.Substring(ExceptionVar.Length + 1, 15).Equals("printStackTrace"))
             {
                 return false;
             }
@@ -342,6 +366,7 @@ namespace tla_proj
                 {
                     stack.Pop();
                 }
+                i++;
             }
 
             if (stack.Count > 0)

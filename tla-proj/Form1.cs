@@ -15,6 +15,7 @@ namespace tla_proj
         public Form1()
         {
             InitializeComponent();
+            NoErr.Visible = false;
         }
 
         private int totalErrors = 0;
@@ -33,7 +34,7 @@ namespace tla_proj
 
         private void Start_Click(object sender, EventArgs e)
         {
-            ErrorCheck errorCheck = new ErrorCheck(FilePath.Text , Errorlabel , errorTextBox);
+            ErrorCheck errorCheck = new ErrorCheck(FilePath.Text , Errorlabel , NoErr);
 
             errorCheck.startScan();
         }
